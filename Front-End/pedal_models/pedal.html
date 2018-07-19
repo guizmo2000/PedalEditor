@@ -112,6 +112,11 @@
 			setSrc(src) {
 				this.src = src;
 			}
+			
+			setSelectedElementAttribute(key, value) {
+				this.selectedElement[key] = value;
+				this.updateStyle_();
+			}
 
 			connectedCallback() {
 				var shadowRoot = this.attachShadow({ mode: 'open' });
@@ -166,8 +171,7 @@
 				this.highlightElement(elementId);
 
 				this.updateStyle(this);
-				let evt = new CustomEvent('select-knob', { detail: elementId });
-				this.dispatchEvent(evt);
+				this.dispatchEvent(this.configChangedEvent);
 
 			}
 
@@ -466,16 +470,14 @@
 					#${label.id} {
 								left: ${label.x}px;
 								top: ${label.y}px;
+								color: #${label.label_color};
+								font-family: "${label.label_fontfamily}";
+								font-size: ${label.label_fontsize}px;
+							}
 
-							}
-					#${label.id} div {
-							color: #${label.label_color};
-							font-family: "${label.label_fontfamily}";
-							font-size: ${label.label_fontsize}px;
-							}
-						`
+					`
 					let labelContainer = this.shadowRoot.querySelector('#' + label.id);
-
+					labelContainer.innerHTML = label.label;
 				}
 
 
