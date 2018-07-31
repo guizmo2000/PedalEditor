@@ -37,6 +37,9 @@
 
 		let BACKGROUND_IMAGES_URL = './img/background/';
 
+		//let ASSETS_PATH = 'https://wasabi.i3s.unice.fr/WebAudioPluginBank/WASABI/PingPongDelay2Amine/img';
+
+		// Use when server down.
 		let ASSETS_PATH = './img';
 
 		class Pedal extends HTMLElement {
@@ -98,7 +101,12 @@
 					this.backgroundImageSrc = imageName;
 					let backgroundImageElem = this.shadowRoot.querySelector('#background-image');
 					backgroundImageElem.setAttribute('src', ASSETS_PATH + '/background/' + imageName);
+					this.backgroundImageName = imageName;
 				}
+			}
+
+			getBackgroundImageName() {
+				return this.backgroundImageName;
 			}
 
 			setBackgroundImagebysrc(src) {
@@ -253,9 +261,10 @@
 								border: 1px solid black;
 							}
 
-							.knob, .switch, .icon, .label{
+							.knob, .switch, .icon, .label, .slider {
 								position: absolute;
 								cursor: pointer;
+								text-align: center;
 							}
 
 						
@@ -417,6 +426,7 @@
 
 						var switchElem = thatDoc.createElement("webaudio-switch");
 						switchElem.setAttribute('src', ASSETS_PATH + '/switches/' + s.model);
+						
 						switchElem.setAttribute('height', s.height);
 						switchElem.setAttribute('width', s.width);
 
@@ -443,17 +453,26 @@
 							
 						}
 					`
-					let sliderContainer = this.shadowRoot.querySelector('#' + slider.id);
+					let sliderContainer = this.shadowRoot.getElementById(slider.id);
+					
+					if(sliderContainer) {
+						let sliderElem = thatDoc.createElement("webaudio-slider");
+						sliderContainer.innerHTML = '';
+						sliderElem.setAttribute('value', slider.value);
+						sliderElem.setAttribute('height', slider.height);
+						sliderElem.setAttribute('width', slider.width);
 
-					let sliderElem = sliderContainer.childNodes[0];
-					sliderElem.value = slider.value;
-					sliderElem.setAttribute('value', slider.value);
+						sliderElem.src = ASSETS_PATH + '/sliders/' + slider.model;
+						sliderElem.setAttribute('src', ASSETS_PATH + '/sliders/' + slider.model);
+						sliderElem.setAttribute('knobsrc', ASSETS_PATH + '/sliders/sliderKnob.png');
+						
+						
+						sliderContainer.appendChild(sliderElem);
 
-					sliderElem.src = ASSETS_PATH + '/sliders/' + slider.model;
-					sliderElem.setAttribute('src', ASSETS_PATH + '/img/sliders/' + slider.model);
-
-					let labelElem = sliderContainer.childNodes[1];
-					labelElem.innerHTML = slider.label;
+						let labelElem = thatDoc.createElement("div");
+						labelElem.innerHTML = slider.label;
+						sliderContainer.appendChild(labelElem);
+					}
 
 				}
 
@@ -556,6 +575,22 @@
 					}
 				}
 
+				for(let element of config.elements) {
+					if(element.type == 'slider') {
+						let slider = this.addElement('slider', null, element.id);
+						slider.id = element.id;
+						slider.x = element.x;
+						slider.y = element.y;
+						slider.width = element.width;
+						slider.height = element.height;
+						slider.label = element.label;
+						slider.label_fontfamily = element.label_fontfamily;
+						slider.label_fontsize = element.label_fontsize;
+						slider.label_color = element.label_color;
+						slider.type = element.type; 
+					}
+				}
+
 				if (config.name) {
 					for (let element of config.elements) {
 						if (element.type == 'label') {
@@ -577,6 +612,7 @@
 				this.setAttribute('radius', config.radius);
 				this.setAttribute('name', config.name);
 				this.setAttribute('opacity', config.opacity || 1);		// If the opacity is not set, initialize it to the default value which is 1.
+				
 				this.setBackgroundImage(config.backgroundImageSrc);
 			}
 
@@ -612,6 +648,10 @@
 
 				for(let switch_ of this.switches) {
 					config.elements.push(switch_);
+				}
+
+				for(let slider of this.sliders) {
+					config.elements.push(slider);
 				}
 
 				return config;
