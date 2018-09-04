@@ -615,7 +615,7 @@
 
 
     function loadPedalConfig(value) {
-        
+
         newPedal();
         for (let pedalConfig of savedPedalsConfigs) {
             if (pedalConfig.id == value) {
@@ -732,77 +732,78 @@
         var plugin = new window[className](ctx, baseURL);
         console.log(plugin);
 
+        // The load part available with just a main.js file.
         plugin.load().then((node) => {
-            plugin.loadGui().then((elem) => {
-                let descriptor = node.getDescriptor();
+            let descriptor = node.getDescriptor();
+            let nbParam = Object.keys(descriptor).length;
+            var count = 0;
+            let hoffset = 50;
+            let voffset = 60;
+            let withGui = false;
+            //--------------------------------- JSON edition PART -------------------------//
+
+            let extendedDescriptor = {
+                "name": name,
+                "backgroundImageSrc": "image2.png",
+                "color": "#AB2E24",
+                "width": 300,
+                "height": 200,
+                "radius": "10",
+                "elements": []
+            }
+
+
+            for (var param in descriptor) {
+                // 2* because we want by default two ranges of knobs
+                let horizontalRange = Math.ceil(count % (nbParam / 2));
+                let verticalRange = Math.floor(count / (nbParam / 2));
+                console.log(param, horizontalRange, verticalRange);
+
+                // Here we do a little normalisation because we have to select by ID later
+
+                if (descriptor.hasOwnProperty(param)) {
+                    var element = {
+                        "id": param.toLowerCase().replace(/ /g, "").replace('\/', ""),
+                        "x": hoffset * horizontalRange,
+                        "y": voffset * verticalRange,
+                        "width": 40,
+                        "height": 40,
+                        "model": "Carbon.png",
+                        "value": descriptor[param].defaultValue,
+                        "min": descriptor[param].minValue,
+                        "max": descriptor[param].maxValue,
+                        "label": param,
+                        "label_fontfamily": "Verdana",
+                        "label_fontsize": "7",
+                        "label_color": "000000",
+                        "type": "knob"
+                    }
+
+                }
+                count++;
+                extendedDescriptor.elements.push(element);
+            }
+            var elemlabel = {
+                "x": 20,
+                "y": 130,
+                "label": name,
+                "label_fontfamily": 'Comic Sans MS',
+                "label_fontsize": '14',
+                "label_color": 'ffffff',
+                "type": 'label'
+            }
+            extendedDescriptor.elements.push(elemlabel);
+            if (plugin.loadGui) plugin.loadGui().then((elem) => {
                 let dimensions = elem.properties;
-                let nbParam = Object.keys(descriptor).length;
-                var count = 0;
-                let hoffset = 50;
-                let voffset = 60;
                 console.log(descriptor);
 
-                //--------------------------------- JSON edition PART -------------------------//
-                let extendedDescriptor = {
-                    "name": name,
-                    "backgroundImageSrc": "image2.png",
-                    "color": "#AB2E24",
-                    "width": dimensions.dataWidth.value,
-                    "height": dimensions.dataHeight.value,
-                    "radius": "10",
-                    "elements": []
-                }
-
-
-                for (var param in descriptor) {
-                    // 2* because we want by default two ranges of knobs
-                    let horizontalRange = Math.ceil(count % (nbParam / 2));
-                    let verticalRange = Math.floor(count / (nbParam / 2));
-                    console.log(param, horizontalRange, verticalRange);
-
-                    // Here we do a little normalisation because we have to select by ID later
-
-                    if (descriptor.hasOwnProperty(param)) {
-                        var element = {
-                            "id": param.toLowerCase().replace(/ /g, "").replace('\/', ""),
-                            "x": hoffset * horizontalRange,
-                            "y": voffset * verticalRange,
-                            "width": 40,
-                            "height": 40,
-                            "model": "Carbon.png",
-                            "value": descriptor[param].defaultValue,
-                            "min": descriptor[param].minValue,
-                            "max": descriptor[param].maxValue,
-                            "label": param,
-                            "label_fontfamily": "Verdana",
-                            "label_fontsize": "7",
-                            "label_color": "000000",
-                            "type": "knob"
-                        }
-
-                    }
-                    count++;
-                    extendedDescriptor.elements.push(element);
-
-
-                }
-                var elemlabel = {
-                    "x": 20,
-                    "y": 130,
-                    "label": name,
-                    "label_fontfamily": 'Comic Sans MS',
-                    "label_fontsize": '14',
-                    "label_color": 'ffffff',
-                    "type": 'label'
-                }
-                extendedDescriptor.elements.push(elemlabel);
+                //--------------------------------- JSON GUI edition PART -------------------------//
+                extendedDescriptor = Object.assign({ "width": dimensions.dataWidth.value, "heigth": dimensions.dataHeight.value }, extendedDescriptor)
                 //-------------------- END of JSON Edition -------------------- //
-
-                newPedal(extendedDescriptor);
+                //newPedal(extendedDescriptor);
                 console.log(extendedDescriptor);
-
-
             });
+            newPedal(extendedDescriptor);
             delete node;
 
         });
